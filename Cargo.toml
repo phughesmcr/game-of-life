@@ -1,0 +1,9 @@
+[package]
+name = "game_of_life"
+version = "0.1.0"
+authors = ["phugh <peter@phugh.es>"]
+edition = "2018"
+
+[dependencies]
+piston_window="*"
+rand="*"
