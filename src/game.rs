@@ -33,12 +33,8 @@ impl Game {
     }
   }
 
-  pub fn pause(&mut self) {
-    if self.paused {
-        self.paused = false;
-    } else {
-        self.paused = true;
-    }
+  pub fn toggle_pause(&mut self) {
+    self.paused = !self.paused;
   }
 
   pub fn randomise(&mut self) {

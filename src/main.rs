@@ -12,6 +12,9 @@ const SCALE: usize = 10;
 const HEIGHT: usize = 720;
 const WIDTH: usize = 1280;
 const FRAME_TIME_MS :u64 = 60;
+// RGBA colours
+const ALIVE: [f32; 4] = [0.0, 0.5, 0.0, 1.0];
+const DEAD: [f32; 4]= [1.0, 1.0, 1.0, 1.0];
 
 fn main() {
     assert!(WIDTH % SCALE == 0);
@@ -29,13 +32,12 @@ fn main() {
 
     game.randomise();
 
-    game.pause();
+    game.toggle_pause();
 
     // used later to draw squares to scale
     const S: f64 = SCALE as f64;
 
     // for grid line drawing
-    let mut lines_scale: f64 = SCALE as f64;
     let mut lines: bool = false;
 
     // mouse coords for mouse painting
@@ -45,20 +47,27 @@ fn main() {
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
         if let Some(_r) = e.render_args() {
+            // check if we want grid lines
+            let lines_scale = if lines {
+                S - 1.0
+            } else {
+                S
+            };
+            // DRAW!
             window.draw_2d(&e, |_c, g| {
-                clear([0.0, 0.0, 0.0, 1.0], g);
+                clear([0.0, 0.0, 0.0, 1.0], g); // clear screen
 
                 for cell in game.grid.iter() {
                     let colour = if cell.alive {
-                        [0.0, 0.5, 0.0, 1.0]
+                        ALIVE
                     } else {
-                        [1.0, 1.0, 1.0, 1.0]
+                        DEAD
                     };
-                    let x = cell.coords[0] as f64;
-                    let y = cell.coords[1] as f64;
                     rectangle(colour,
                         rectangle::square(0.0, 0.0, lines_scale),
-                        _c.transform.trans(x * S, y * S),
+                        _c.transform.trans(
+                            cell.coords[0] as f64 * S, 
+                            cell.coords[1] as f64 * S),
                         g);   
                 }
             });
@@ -88,16 +97,10 @@ fn main() {
                             game.randomise();
                         }
                         Key::P => { 
-                            game.pause();
+                            game.toggle_pause();
                         }
                         Key::L => {
-                            if lines {
-                                lines_scale = SCALE as f64;
-                                lines = false;
-                            } else {
-                                lines_scale -= 1.0;
-                                lines = true;
-                            }
+                            lines = !lines;
                         }
                         _ => {}
                     }
