@@ -1,6 +1,3 @@
-extern crate rand;
-use rand::Rng;
-
 #[derive(Clone, Copy)]
 pub struct Cell {
   pub age: usize,
@@ -20,13 +17,19 @@ impl Cell {
   }
 
   pub fn init(&mut self, cell: usize, width: usize, height: usize) {
-    let mut rng = rand::thread_rng();
-    let n: usize = rng.gen();
     self.age = 0;
-    self.alive = n % 2 == 0;
+    self.alive = false;
     self.coords = self.get_coords(cell, width);
     self.neighbours = self.get_neighbours(cell, width, height);
     // println!("Cell: {}, coords: {:?}, neighbours: {:?}", cell, self.coords, self.neighbours);
+  }
+
+  pub fn toggle_life(&mut self) {
+    if self.alive {
+      self.alive = false;
+    } else {
+      self.alive = true;
+    }
   }
 
   pub fn get_coords(&self, n: usize, w: usize) -> [usize; 2] {

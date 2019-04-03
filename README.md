@@ -8,9 +8,13 @@ Conway's Game of Life in [Rust](https://github.com/rust-lang/rust) using [Piston
 
 ## How to Play
 
+```Mouse click``` to paint cells.
+
+Press ```C``` to clear the grid.
+
 Press ```R``` to randomise the grid.
 
-Press ```P``` or click with the mouse to pause.
+Press ```P``` or to pause.
 
 Press ```L``` to toggle grid lines.
 

@@ -1,8 +1,12 @@
+extern crate rand;
+
+use rand::Rng;
 use crate::cell::Cell;
 
 pub struct Game {
   pub width: usize,
   pub height: usize,
+  pub scale: usize,
   pub size: usize,
   pub grid: Vec<Cell>,
   pub paused: bool
@@ -17,6 +21,7 @@ impl Game {
       grid: vec![Cell::new(); size],
       width: w,
       height: h,
+      scale,
       size,
       paused: true
     }
@@ -26,7 +31,6 @@ impl Game {
     for c in 0..self.size {
         self.grid[c].init(c, self.width, self.height);
     }
-    self.paused = false;
   }
 
   pub fn pause(&mut self) {
@@ -34,6 +38,15 @@ impl Game {
         self.paused = false;
     } else {
         self.paused = true;
+    }
+  }
+
+  pub fn randomise(&mut self) {
+    let mut rng = rand::thread_rng();
+    for c in 0..self.size {
+      let n: usize = rng.gen();
+      self.grid[c].alive = n % 2 == 0;
+      self.grid[c].age = 0;
     }
   }
 
@@ -71,5 +84,18 @@ impl Game {
     }
     // recycle grid
     self.grid = next;
+  }
+
+  pub fn get_cell(&self, coords: [f64; 2]) -> usize {
+    let scale = self.scale as f64;
+    let x = (coords[0] / scale ).floor();
+    let y = (coords[1] / scale).floor();
+    let cell = (y * self.width as f64) + x;
+    cell as usize
+  }
+
+  pub fn paint(&mut self, coords: [f64; 2]) {
+    let index = self.get_cell(coords);
+    self.grid[index].toggle_life();
   }
 }

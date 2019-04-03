@@ -8,10 +8,10 @@ mod game;
 mod cell;
 
 // Config
-const SCALE: usize = 20;
+const SCALE: usize = 10;
 const HEIGHT: usize = 720;
 const WIDTH: usize = 1280;
-const FRAME_TIME_MS :u64 = 25;
+const FRAME_TIME_MS :u64 = 60;
 
 fn main() {
     assert!(WIDTH % SCALE == 0);
@@ -27,12 +27,21 @@ fn main() {
 
     game.init();
 
+    game.randomise();
+
+    game.pause();
+
+    // used later to draw squares to scale
     const S: f64 = SCALE as f64;
 
     // for grid line drawing
     let mut lines_scale: f64 = SCALE as f64;
     let mut lines: bool = false;
 
+    // mouse coords for mouse painting
+    let mut mouse_pos: [f64; 2] = [0.0, 0.0];
+
+    // event loop
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
         if let Some(_r) = e.render_args() {
@@ -72,9 +81,11 @@ fn main() {
             match b {
                 Button::Keyboard(key) => {
                     match key {
-                        Key::R => { 
-                            game = game::Game::new(WIDTH, HEIGHT, SCALE);
+                        Key::C => {
                             game.init();
+                        }
+                        Key::R => { 
+                            game.randomise();
                         }
                         Key::P => { 
                             game.pause();
@@ -92,10 +103,15 @@ fn main() {
                     }
                 },
                 Button::Mouse(_button) => {
-                    game.pause();
+                    game.paint(mouse_pos);
                 },
                 _ => { }
             }
+        }
+
+        if let Some(c) = e.mouse_cursor_args() {
+            mouse_pos[0] = c[0];
+            mouse_pos[1] = c[1];
         }
     }
 }
