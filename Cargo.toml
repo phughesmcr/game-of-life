@@ -5,5 +5,5 @@ authors = ["phugh <peter@phugh.es>"]
 edition = "2018"
 
 [dependencies]
-piston_window="*"
-rand="*"
+piston_window="0.89.0"
+rand="0.6.5"
