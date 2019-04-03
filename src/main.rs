@@ -1,15 +1,17 @@
 extern crate piston_window;
 
 use piston_window::*;
-use std::{thread, time};
+use std::thread;
+use std::time::{Instant, Duration};
 
 mod game;
 mod cell;
 
 // Config
-const SCALE: usize = 10;
-const HEIGHT: usize = 480;
-const WIDTH: usize = 640;
+const SCALE: usize = 20;
+const HEIGHT: usize = 720;
+const WIDTH: usize = 1280;
+const FRAME_TIME_MS :u64 = 25;
 
 fn main() {
     assert!(WIDTH % SCALE == 0);
@@ -55,8 +57,14 @@ fn main() {
 
         if let Some(_u) = e.update_args() {
             if !game.paused {
+                let last_time = Instant::now();
+                // update game state
                 game.update();
-                thread::sleep(time::Duration::from_millis(20));
+                // framerate independence
+                let delta_time = u64::from((Instant::now() - last_time).subsec_millis());
+                if delta_time < FRAME_TIME_MS {
+                    thread::sleep(Duration::from_millis(FRAME_TIME_MS - delta_time));
+                }
             }
         }
 
