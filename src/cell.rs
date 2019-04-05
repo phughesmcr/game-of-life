@@ -22,11 +22,7 @@ impl Cell {
   }
 
   pub fn toggle_life(&mut self) {
-    if self.alive {
-      self.alive = false;
-    } else {
-      self.alive = true;
-    }
+    self.alive = !self.alive;
   }
 
   pub fn get_coords(&self, n: usize, w: usize) -> [usize; 2] {

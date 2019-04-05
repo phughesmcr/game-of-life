@@ -69,7 +69,7 @@ impl Game {
       } else if (neighbours < 2) || (neighbours > 3) {
           next[i].alive = false;
       } else {
-          next[i] = self.grid[i];
+          next[i] = *cell;
       }
       next[i].coords = cell.coords;
       next[i].neighbours = cell.neighbours;
