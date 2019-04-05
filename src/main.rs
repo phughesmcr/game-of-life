@@ -1,4 +1,5 @@
 use clap::Arg;
+use opengl_graphics::{ GlGraphics, OpenGL };
 use piston_window::{clear, rectangle, Button, EventSettings, Events, Key, MouseCursorEvent, PistonWindow, PressEvent, RenderEvent, Transformed, UpdateEvent, WindowSettings};
 use std::thread;
 use std::time::{Instant, Duration};
@@ -48,19 +49,24 @@ fn main() {
 
 
     let frame_time_ms = matches.value_of("fps").map(|valstr| valstr.parse::<u64>().unwrap())
-                                        .unwrap_or(60);
+                                        .unwrap_or(30);
     let scale: usize = matches.value_of("scale").map(|valstr| valstr.parse::<u32>().unwrap())
-                                        .unwrap_or(10) as usize;
+                                        .unwrap_or(5) as usize;
     let map_file = matches.value_of("map").unwrap_or("default");
 
     assert!(WIDTH % scale == 0);
     assert!(HEIGHT % scale == 0);
 
+    let opengl = OpenGL::V3_2;
+
     let mut window: PistonWindow = WindowSettings::new("Game of Life", (WIDTH as f64, HEIGHT as f64))
+        .opengl(opengl)
         .vsync(true)
         .exit_on_esc(true)
         .build()
         .expect("Failed to build window!");
+
+    let mut gl = GlGraphics::new(opengl);
     
     let mut game = game::Game::new(WIDTH, HEIGHT, scale);
 
@@ -86,7 +92,7 @@ fn main() {
     // event loop
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
-        if e.render_args().is_some() {
+        if let Some(r) = e.render_args() {
             // check if we want grid lines
             let lines_scale = if lines {
                 scale_f64 - 1.0
@@ -94,8 +100,10 @@ fn main() {
                 scale_f64
             };
             // DRAW!
-            window.draw_2d(&e, |c, g| {
-                clear([0.0, 0.0, 0.0, 1.0], g); // clear screen
+            gl.viewport(0, 0, r.width as i32, r.height as i32);
+
+            gl.draw(r.viewport(), |c, g| {
+                clear([1.0, 1.0, 1.0, 1.0], g);
 
                 for cell in game.grid.iter() {
                     let colour = if cell.alive {
