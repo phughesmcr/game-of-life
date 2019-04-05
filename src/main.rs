@@ -1,17 +1,15 @@
-extern crate piston_window;
-
-use piston_window::*;
+use piston_window::{clear, rectangle, Button, EventSettings, Events, Key, MouseCursorEvent, PistonWindow, PressEvent, RenderEvent, Transformed, UpdateEvent, WindowSettings};
 use std::thread;
 use std::time::{Instant, Duration};
 
-mod game;
 mod cell;
+mod game;
 
 // Config
 const SCALE: usize = 10;
 const HEIGHT: usize = 720;
 const WIDTH: usize = 1280;
-const FRAME_TIME_MS :u64 = 60;
+const FRAME_TIME_MS: u64 = 60;
 // RGBA colours
 const ALIVE: [f32; 4] = [0.0, 0.5, 0.0, 1.0];
 const DEAD: [f32; 4]= [1.0, 1.0, 1.0, 1.0];
@@ -24,7 +22,7 @@ fn main() {
         .vsync(true)
         .exit_on_esc(true)
         .build()
-        .unwrap_or_else(|e| { panic!("Failed to build PistonWindow: {}", e) });
+        .expect("Failed to build window!");
     
     let mut game = game::Game::new(WIDTH, HEIGHT, SCALE);
 
@@ -46,7 +44,7 @@ fn main() {
     // event loop
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
-        if let Some(_r) = e.render_args() {
+        if e.render_args().is_some() {
             // check if we want grid lines
             let lines_scale = if lines {
                 S - 1.0
@@ -54,7 +52,7 @@ fn main() {
                 S
             };
             // DRAW!
-            window.draw_2d(&e, |_c, g| {
+            window.draw_2d(&e, |c, g| {
                 clear([0.0, 0.0, 0.0, 1.0], g); // clear screen
 
                 for cell in game.grid.iter() {
@@ -65,35 +63,34 @@ fn main() {
                     };
                     rectangle(colour,
                         rectangle::square(0.0, 0.0, lines_scale),
-                        _c.transform.trans(
+                        c.transform.trans(
                             cell.coords[0] as f64 * S, 
                             cell.coords[1] as f64 * S),
                         g);   
                 }
             });
         }
-
-        if let Some(_u) = e.update_args() {
-            if !game.paused {
-                let last_time = Instant::now();
-                // update game state
-                game.update();
-                // framerate independence
-                let delta_time = u64::from((Instant::now() - last_time).subsec_millis());
-                if delta_time < FRAME_TIME_MS {
-                    thread::sleep(Duration::from_millis(FRAME_TIME_MS - delta_time));
-                }
+        
+        if e.update_args().is_some() && !game.paused {
+            let last_time = Instant::now();
+            // update game state
+            game.update();
+            // framerate independence
+            let delta_time = u64::from((Instant::now() - last_time).subsec_millis());
+            if delta_time < FRAME_TIME_MS {
+                thread::sleep(Duration::from_millis(FRAME_TIME_MS - delta_time));
             }
         }
-
-        if let Some(b) = e.release_args() {
+        
+        if let Some(b) = e.press_args() {
             match b {
                 Button::Keyboard(key) => {
                     match key {
                         Key::C => {
+                            // clear the grid
                             game.init();
                         }
-                        Key::R => { 
+                        Key::R => {
                             game.randomise();
                         }
                         Key::P => { 
@@ -112,9 +109,8 @@ fn main() {
             }
         }
 
-        if let Some(c) = e.mouse_cursor_args() {
-            mouse_pos[0] = c[0];
-            mouse_pos[1] = c[1];
+        if let Some(new_pos) = e.mouse_cursor_args() {
+            mouse_pos = new_pos;
         }
     }
 }

@@ -1,5 +1,3 @@
-extern crate rand;
-
 use rand::Rng;
 use crate::cell::Cell;
 
