@@ -41,7 +41,6 @@ impl Game {
     for c in 0..self.size {
       let n: usize = rng.gen();
       self.grid[c].alive = n % 2 == 0;
-      self.grid[c].age = 0;
     }
   }
 
@@ -69,10 +68,8 @@ impl Game {
           next[i].alive = true;
       } else if (neighbours < 2) || (neighbours > 3) {
           next[i].alive = false;
-          next[i].age = 0;
       } else {
           next[i] = self.grid[i];
-          next[i].age = cell.age + 1;
       }
       next[i].coords = cell.coords;
       next[i].neighbours = cell.neighbours;
@@ -114,7 +111,6 @@ impl Game {
       } else {
         self.grid[c].alive = true;
       }
-      self.grid[c].age = 0;
     }
   }
 }

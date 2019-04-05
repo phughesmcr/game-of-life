@@ -1,6 +1,5 @@
 #[derive(Clone, Copy)]
 pub struct Cell {
-  pub age: usize,
   pub alive: bool,
   pub coords: [usize; 2],
   pub neighbours: [usize; 8]
@@ -9,7 +8,6 @@ pub struct Cell {
 impl Cell {
   pub fn new() -> Cell {
     Cell {
-      age: 0,
       alive: false,
       coords: [0, 0],
       neighbours: [0, 0, 0, 0, 0, 0, 0, 0]
@@ -17,7 +15,6 @@ impl Cell {
   }
 
   pub fn init(&mut self, cell: usize, width: usize, height: usize) {
-    self.age = 0;
     self.alive = false;
     self.coords = self.get_coords(cell, width);
     self.neighbours = self.get_neighbours(cell, width, height);
