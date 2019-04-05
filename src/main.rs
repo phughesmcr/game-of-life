@@ -1,3 +1,4 @@
+use clap::Arg;
 use piston_window::{clear, rectangle, Button, EventSettings, Events, Key, MouseCursorEvent, PistonWindow, PressEvent, RenderEvent, Transformed, UpdateEvent, WindowSettings};
 use std::thread;
 use std::time::{Instant, Duration};
@@ -6,17 +7,47 @@ mod cell;
 mod game;
 
 // Config
-const SCALE: usize = 10;
 const HEIGHT: usize = 720;
 const WIDTH: usize = 1280;
-const FRAME_TIME_MS: u64 = 60;
 // RGBA colours
 const ALIVE: [f32; 4] = [0.0, 0.5, 0.0, 1.0];
 const DEAD: [f32; 4]= [1.0, 1.0, 1.0, 1.0];
 
+fn is_positive(valstr: String) -> Result<(), String> {
+    if valstr.parse::<u32>().is_ok() {
+        Ok(())
+    } else {
+        Err(format!("{} is not a valid number (must be positive)", valstr))
+    }
+}
+
 fn main() {
-    assert!(WIDTH % SCALE == 0);
-    assert!(HEIGHT % SCALE == 0);
+    // parse flags
+    let matches = clap::App::new("game-of-life")
+                .arg(Arg::with_name("fps")
+                    .short("f")
+                    .long("fps")
+                    .value_name("FPS")
+                    .help("Sets the ms between each update")
+                    .takes_value(true)
+                    .validator(is_positive))
+                .arg(Arg::with_name("scale")
+                    .short("s")
+                    .long("scale")
+                    .value_name("SCALE")
+                    .help("Sets the size of the cells")
+                    .takes_value(true)
+                    .validator(is_positive))
+                .get_matches();
+
+
+    let frame_time_ms = matches.value_of("fps").map(|valstr| valstr.parse::<u64>().unwrap())
+                                        .unwrap_or(60);
+    let scale: usize = matches.value_of("scale").map(|valstr| valstr.parse::<u32>().unwrap())
+                                        .unwrap_or(10) as usize;
+
+    assert!(WIDTH % scale == 0);
+    assert!(HEIGHT % scale == 0);
 
     let mut window: PistonWindow = WindowSettings::new("Game of Life", (WIDTH as f64, HEIGHT as f64))
         .vsync(true)
@@ -24,7 +55,7 @@ fn main() {
         .build()
         .expect("Failed to build window!");
     
-    let mut game = game::Game::new(WIDTH, HEIGHT, SCALE);
+    let mut game = game::Game::new(WIDTH, HEIGHT, scale);
 
     game.init();
 
@@ -33,7 +64,7 @@ fn main() {
     game.toggle_pause();
 
     // used later to draw squares to scale
-    const S: f64 = SCALE as f64;
+    let scale_f64: f64 = scale as f64;
 
     // for grid line drawing
     let mut lines: bool = false;
@@ -47,9 +78,9 @@ fn main() {
         if e.render_args().is_some() {
             // check if we want grid lines
             let lines_scale = if lines {
-                S - 1.0
+                scale_f64 - 1.0
             } else {
-                S
+                scale_f64
             };
             // DRAW!
             window.draw_2d(&e, |c, g| {
@@ -64,8 +95,8 @@ fn main() {
                     rectangle(colour,
                         rectangle::square(0.0, 0.0, lines_scale),
                         c.transform.trans(
-                            cell.coords[0] as f64 * S, 
-                            cell.coords[1] as f64 * S),
+                            cell.coords[0] as f64 * scale_f64, 
+                            cell.coords[1] as f64 * scale_f64),
                         g);   
                 }
             });
@@ -77,8 +108,8 @@ fn main() {
             game.update();
             // framerate independence
             let delta_time = u64::from((Instant::now() - last_time).subsec_millis());
-            if delta_time < FRAME_TIME_MS {
-                thread::sleep(Duration::from_millis(FRAME_TIME_MS - delta_time));
+            if delta_time < frame_time_ms {
+                thread::sleep(Duration::from_millis(frame_time_ms - delta_time));
             }
         }
         
