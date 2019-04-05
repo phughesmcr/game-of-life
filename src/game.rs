@@ -1,3 +1,4 @@
+use image::{GenericImageView};
 use rand::Rng;
 use crate::cell::Cell;
 
@@ -91,5 +92,29 @@ impl Game {
   pub fn paint(&mut self, coords: [f64; 2]) {
     let index = self.get_cell(coords);
     self.grid[index].toggle_life();
+  }
+
+  pub fn image_to_grid(&mut self, filename: &str) {
+    let im = image::open(filename).unwrap();
+
+    // TODO better error checking
+    let dims = im.dimensions();
+    let (a, b) = dims;
+    assert!(self.width * self.scale == a as usize);
+    assert!(self.height * self.scale == b as usize);
+    
+    let scale = self.scale as u32;
+    let white: [u8; 4] = [255, 255, 255, 255]; 
+    for c in 0..self.size {
+      let cell = self.grid[c];
+      let coords = cell.get_coords(c, self.width);
+      let pixel = im.get_pixel(coords[0] as u32 * scale, coords[1] as u32 * scale);
+      if pixel.data == white {
+        self.grid[c].alive = false;
+      } else {
+        self.grid[c].alive = true;
+      }
+      self.grid[c].age = 0;
+    }
   }
 }

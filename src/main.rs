@@ -38,6 +38,12 @@ fn main() {
                     .help("Sets the size of the cells")
                     .takes_value(true)
                     .validator(is_positive))
+                .arg(Arg::with_name("map")
+                    .short("m")
+                    .long("map")
+                    .value_name("FILE")
+                    .help("Game grid from image")
+                    .takes_value(true))
                 .get_matches();
 
 
@@ -45,6 +51,7 @@ fn main() {
                                         .unwrap_or(60);
     let scale: usize = matches.value_of("scale").map(|valstr| valstr.parse::<u32>().unwrap())
                                         .unwrap_or(10) as usize;
+    let map_file = matches.value_of("map").unwrap_or("default");
 
     assert!(WIDTH % scale == 0);
     assert!(HEIGHT % scale == 0);
@@ -58,8 +65,12 @@ fn main() {
     let mut game = game::Game::new(WIDTH, HEIGHT, scale);
 
     game.init();
-
-    game.randomise();
+    
+    if map_file == "default" {
+        game.randomise();
+    } else {
+        game.image_to_grid(map_file);
+    }
 
     game.toggle_pause();
 
