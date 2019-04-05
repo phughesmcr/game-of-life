@@ -42,6 +42,14 @@ For example:
 For example:
 ```./game_of_life -s 8```
 
+## To Do
+- [ ] Window size command line flags (inc. start-fullscreen flag)
+- [ ] Resize grid on window resize
+- [ ] Custom colours
+- [ ] Toggleable FPS counter on screen
+- [ ] Toggleable on-screen game stats
+- [ ] Obstacle blocks (maybe?)
+
 ## License
 Copyright [P. Hughes](https://www.phugh.es) 2019.
 
