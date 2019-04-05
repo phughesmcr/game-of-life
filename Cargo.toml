@@ -6,6 +6,8 @@ edition = "2018"
 
 [dependencies]
 clap="2.32.0"
+find_folder = "0.3.0"
+fps_counter = "1.0.0"
 image="0.21.0"
 piston2d-opengl_graphics="0.59.0"
 piston_window="0.89.0"

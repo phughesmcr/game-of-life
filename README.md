@@ -14,11 +14,14 @@ Features in-game cell painting and custom grids from files.
 
 Press ```C``` to clear the grid.
 
-Press ```R``` to randomise the grid.
+Press ```F``` to display FPS counter.
+
+Press ```L``` to toggle grid lines.
 
 Press ```P``` or to pause.
 
-Press ```L``` to toggle grid lines.
+Press ```R``` to randomise the grid.
+
 
 ## Command Line Flags
 
@@ -46,9 +49,13 @@ For example:
 - [ ] Window size command line flags (inc. start-fullscreen flag)
 - [ ] Resize grid on window resize
 - [ ] Custom colours
-- [ ] Toggleable FPS counter on screen
+- [X] Toggleable FPS counter on screen
 - [ ] Toggleable on-screen game stats
 - [ ] Obstacle blocks (maybe?)
+- [ ] Refactor main.rs into main.rs and app.rs
+
+## Acknowledgements
+Perfect DOS VGA 375 font by Zeh Fernando
 
 ## License
 Copyright [P. Hughes](https://www.phugh.es) 2019.

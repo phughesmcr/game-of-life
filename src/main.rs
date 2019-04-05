@@ -1,6 +1,7 @@
 use clap::Arg;
-use opengl_graphics::{ GlGraphics, OpenGL };
-use piston_window::{clear, rectangle, Button, EventSettings, Events, Key, MouseCursorEvent, PistonWindow, PressEvent, RenderEvent, Transformed, UpdateEvent, WindowSettings};
+use fps_counter::FPSCounter;
+use opengl_graphics::{GlGraphics, GlyphCache, OpenGL, TextureSettings, UpdateTexture};
+use piston_window::{clear, rectangle, text, Button, EventSettings, Events, Key, MouseCursorEvent, PistonWindow, PressEvent, RenderEvent, Transformed, UpdateEvent, WindowSettings};
 use std::thread;
 use std::time::{Instant, Duration};
 
@@ -89,6 +90,16 @@ fn main() {
     // mouse coords for mouse painting
     let mut mouse_pos: [f64; 2] = [0.0, 0.0];
 
+    // fps counter
+    let mut fps_display: bool = false;
+    let mut fps = FPSCounter::new();
+    let fps_str: &str = " fps";
+
+    // fonts for screen text
+    let assets = find_folder::Search::ParentsThenKids(3, 3).for_folder("res").unwrap();
+    let font = &assets.join("Perfect-DOS-VGA-437-Win.ttf");
+    let mut glyphs = GlyphCache::new(font, (), TextureSettings::new()).expect("Unable to load font");;
+
     // event loop
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
@@ -99,6 +110,7 @@ fn main() {
             } else {
                 scale_f64
             };
+
             // DRAW!
             gl.viewport(0, 0, r.width as i32, r.height as i32);
 
@@ -117,6 +129,19 @@ fn main() {
                             cell.coords[0] as f64 * scale_f64, 
                             cell.coords[1] as f64 * scale_f64),
                         g);   
+                }
+                
+                if fps_display {
+                    let mut t = fps.tick().to_string();
+                    t.push_str(&fps_str);
+                    let fps_tick: &str = &t;
+
+                    text::Text::new_color([0.0, 0.0, 0.0, 1.0], 15).draw(
+                        fps_tick,
+                        &mut glyphs,
+                        &c.draw_state,
+                        c.transform.trans(5.0, 15.0), 
+                    g).unwrap();
                 }
             });
         }
@@ -139,6 +164,9 @@ fn main() {
                         Key::C => {
                             // clear the grid
                             game.init();
+                        }
+                        Key::F => {
+                            fps_display = !fps_display;
                         }
                         Key::R => {
                             game.randomise();
