@@ -27,6 +27,11 @@ Press ```R``` to randomise the grid.
 
 The game can be modified by passing command line flags.
 
+### Screen size
+```-w``` or ```--width``` to set screen width in pixels. Default is 1280.
+
+```-h``` or ```--height``` to set screen height in pixels. Default is 720.
+
 ### Custom grid from image
 ```-m``` or ```--map``` followed by an image filename, generate grid from image. White pixels (i.e rgba[255, 255, 255, 255]) are dead cells, any other colours will be treated as living cells. Image file must be 1280x720.
 
@@ -46,7 +51,7 @@ For example:
 ```./game_of_life -s 8```
 
 ## To Do
-- [ ] Window size command line flags (inc. start-fullscreen flag)
+- [X] Window size command line flags (inc. start-fullscreen flag)
 - [ ] Resize grid on window resize
 - [ ] Custom colours
 - [X] Toggleable FPS counter on screen

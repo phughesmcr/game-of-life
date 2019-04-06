@@ -1,6 +1,6 @@
 use clap::Arg;
 use fps_counter::FPSCounter;
-use opengl_graphics::{GlGraphics, GlyphCache, OpenGL, TextureSettings, UpdateTexture};
+use opengl_graphics::{GlGraphics, GlyphCache, OpenGL, TextureSettings};
 use piston_window::{clear, rectangle, text, Button, EventSettings, Events, Key, MouseCursorEvent, PistonWindow, PressEvent, RenderEvent, Transformed, UpdateEvent, WindowSettings};
 use std::thread;
 use std::time::{Instant, Duration};
@@ -8,9 +8,6 @@ use std::time::{Instant, Duration};
 mod cell;
 mod game;
 
-// Config
-const HEIGHT: usize = 720;
-const WIDTH: usize = 1280;
 // RGBA colours
 const ALIVE: [f32; 4] = [0.0, 0.5, 0.0, 1.0];
 const DEAD: [f32; 4]= [1.0, 1.0, 1.0, 1.0];
@@ -26,6 +23,24 @@ fn is_positive(valstr: String) -> Result<(), String> {
 fn main() {
     // parse flags
     let matches = clap::App::new("game-of-life")
+                .arg(Arg::with_name("width")
+                    .short("w")
+                    .long("width")
+                    .value_name("WIDTH")
+                    .help("Sets the screen width in px.")
+                    .takes_value(true)
+                    .validator(is_positive))
+                .arg(Arg::with_name("height")
+                    .short("h")
+                    .long("height")
+                    .value_name("HEIGHT")
+                    .help("Sets the screen height in px.")
+                    .takes_value(true)
+                    .validator(is_positive))
+                .arg(Arg::with_name("fullscreen")
+                    .short("x")
+                    .long("fullscreen")
+                    .help("Run the game in full screen mode."))
                 .arg(Arg::with_name("fps")
                     .short("f")
                     .long("fps")
@@ -48,28 +63,34 @@ fn main() {
                     .takes_value(true))
                 .get_matches();
 
-
+    let width = matches.value_of("width").map(|valstr| valstr.parse::<usize>().unwrap())
+                                        .unwrap_or(1280);
+    let height = matches.value_of("height").map(|valstr| valstr.parse::<usize>().unwrap())
+                                        .unwrap_or(720);
     let frame_time_ms = matches.value_of("fps").map(|valstr| valstr.parse::<u64>().unwrap())
                                         .unwrap_or(30);
     let scale: usize = matches.value_of("scale").map(|valstr| valstr.parse::<u32>().unwrap())
                                         .unwrap_or(5) as usize;
     let map_file = matches.value_of("map").unwrap_or("default");
 
-    assert!(WIDTH % scale == 0);
-    assert!(HEIGHT % scale == 0);
+    assert!(width % scale == 0);
+    assert!(height % scale == 0);
 
     let opengl = OpenGL::V3_2;
 
-    let mut window: PistonWindow = WindowSettings::new("Game of Life", (WIDTH as f64, HEIGHT as f64))
+    let fullscreen = matches.occurrences_of("fullscreen") > 0;
+
+    let mut window: PistonWindow = WindowSettings::new("Game of Life", (width as f64, height as f64))
         .opengl(opengl)
         .vsync(true)
+        .fullscreen(fullscreen)
         .exit_on_esc(true)
         .build()
         .expect("Failed to build window!");
-
+    
     let mut gl = GlGraphics::new(opengl);
     
-    let mut game = game::Game::new(WIDTH, HEIGHT, scale);
+    let mut game = game::Game::new(width, height, scale);
 
     game.init();
     
