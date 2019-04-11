@@ -3,19 +3,19 @@ use rand::Rng;
 use crate::cell::Cell;
 
 pub struct Game {
-  pub width: usize,
-  pub height: usize,
-  pub scale: usize,
+  pub width: f64,
+  pub height: f64,
+  pub scale: f64,
   pub size: usize,
   pub grid: Vec<Cell>,
   pub paused: bool
 }
 
 impl Game {
-  pub fn new(width: usize, height: usize, scale: usize) -> Self {
-    let w = width / scale;
-    let h = height / scale;
-    let size = w * h;
+  pub fn new(width: f64, height: f64, scale: f64) -> Game {
+    let w = (width / scale).floor();
+    let h = (height / scale).floor();
+    let size = (w * h) as usize;
     Game {
       grid: vec![Cell::new(); size],
       width: w,
@@ -79,10 +79,9 @@ impl Game {
   }
 
   pub fn get_cell(&self, coords: [f64; 2]) -> usize {
-    let scale = self.scale as f64;
-    let x = (coords[0] / scale ).floor();
-    let y = (coords[1] / scale).floor();
-    let cell = (y * self.width as f64) + x;
+    let x = (coords[0] / self.scale).floor();
+    let y = (coords[1] / self.scale).floor();
+    let cell = (y * self.width) + x;
     cell as usize
   }
 
@@ -95,17 +94,19 @@ impl Game {
     let im = image::open(filename).unwrap();
 
     // TODO better error checking
-    let dims = im.dimensions();
-    let (a, b) = dims;
-    assert!(self.width * self.scale == a as usize);
-    assert!(self.height * self.scale == b as usize);
+    let (a, b) = im.dimensions();
+    let u_scale = self.scale as u32;
+    let u_width = self.width as u32;
+    let u_height = self.height as u32;
+
+    assert!(u_width * u_scale == a);
+    assert!(u_height * u_scale == b);
     
-    let scale = self.scale as u32;
-    let white: [u8; 4] = [255, 255, 255, 255]; 
+    let white: [u8; 4] = [255; 4]; 
     for c in 0..self.size {
       let cell = self.grid[c];
       let coords = cell.get_coords(c, self.width);
-      let pixel = im.get_pixel(coords[0] as u32 * scale, coords[1] as u32 * scale);
+      let pixel = im.get_pixel(coords[0] as u32 * u_scale, coords[1] as u32 * u_scale);
       if pixel.data == white {
         self.grid[c].alive = false;
       } else {

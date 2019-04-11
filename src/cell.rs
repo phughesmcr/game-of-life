@@ -1,7 +1,7 @@
 #[derive(Clone, Copy)]
 pub struct Cell {
   pub alive: bool,
-  pub coords: [usize; 2],
+  pub coords: [f64; 2],
   pub neighbours: [usize; 8]
 }
 
@@ -9,37 +9,41 @@ impl Cell {
   pub fn new() -> Cell {
     Cell {
       alive: false,
-      coords: [0, 0],
-      neighbours: [0, 0, 0, 0, 0, 0, 0, 0]
+      coords: [0.0; 2],
+      neighbours: [0; 8]
     }
   }
 
-  pub fn init(&mut self, cell: usize, width: usize, height: usize) {
+  pub fn init(&mut self, cell: usize, width: f64, height: f64) {
     self.alive = false;
     self.coords = self.get_coords(cell, width);
     self.neighbours = self.get_neighbours(cell, width, height);
-    // println!("Cell: {}, coords: {:?}, neighbours: {:?}", cell, self.coords, self.neighbours);
   }
 
   pub fn toggle_life(&mut self) {
     self.alive = !self.alive;
   }
 
-  pub fn get_coords(&self, n: usize, w: usize) -> [usize; 2] {
+  pub fn get_coords(&self, n: usize, w: f64) -> [f64; 2] {
+    let n = n as f64;
     let x = n % w;
-    let y = (n / w) as f32;
-    [x, y.floor() as usize] // (col, row)
+    let y = n / w;
+    let y = y.floor();
+    [x, y] // (col, row)
   }
 
-  pub fn get_neighbours(&self, cell: usize, width: usize, height: usize) -> [usize; 8] {
+  pub fn get_neighbours(&self, cell: usize, width: f64, height: f64) -> [usize; 8] {
+    let cell = cell as usize;
+    let width = width as usize;
+    let height = height as usize; 
+
     // Total cells
-    let size = width * height;
+    let size = width * height; 
 
     // Setup
     let lc = ((((cell / width) * width) as f64).floor()) as usize;    // left most cell
     let rc = (lc + width) - 1;                                        // right most cell
     let size_minus_width = size - width;
-    let cell_minus_width = (cell - width) as i32;
     let cell_plus_width = cell + width;
     let cell_mod_width = cell % width;
     let top_right = width - 1;
@@ -56,10 +60,10 @@ impl Cell {
     let south_west;
 
     // North
-    if cell_minus_width < 0 {                   // TOP EDGE
+    if (cell as i32 - width as i32) < 0 {                   // TOP EDGE
       north = size_minus_width + cell;
     } else {
-      north = cell_minus_width as usize;
+      north = cell - width;
     }
 
     // South

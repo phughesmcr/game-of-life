@@ -3,14 +3,14 @@ use fps_counter::FPSCounter;
 use opengl_graphics::{GlGraphics, GlyphCache, OpenGL, TextureSettings};
 use piston_window::{clear, rectangle, text, Button, EventSettings, Events, Key, MouseCursorEvent, PistonWindow, PressEvent, RenderEvent, Transformed, UpdateEvent, WindowSettings};
 use std::thread;
-use std::time::{Instant, Duration};
+use std::time::{Duration};
 
 mod cell;
 mod game;
 
 // RGBA colours
 const ALIVE: [f32; 4] = [0.0, 0.5, 0.0, 1.0];
-const DEAD: [f32; 4]= [1.0, 1.0, 1.0, 1.0];
+const DEAD: [f32; 4]= [0.9; 4];
 
 fn is_positive(valstr: String) -> Result<(), String> {
     if valstr.parse::<u32>().is_ok() {
@@ -63,33 +63,39 @@ fn main() {
                     .takes_value(true))
                 .get_matches();
 
-    let width = matches.value_of("width").map(|valstr| valstr.parse::<usize>().unwrap())
-                                        .unwrap_or(1280);
-    let height = matches.value_of("height").map(|valstr| valstr.parse::<usize>().unwrap())
-                                        .unwrap_or(720);
-    let frame_time_ms = matches.value_of("fps").map(|valstr| valstr.parse::<u64>().unwrap())
-                                        .unwrap_or(30);
-    let scale: usize = matches.value_of("scale").map(|valstr| valstr.parse::<u32>().unwrap())
-                                        .unwrap_or(5) as usize;
+    let width: f64 = matches.value_of("width").map(|valstr| valstr.parse::<f64>().unwrap())
+                                        .unwrap_or(1280.0);
+    let height: f64 = matches.value_of("height").map(|valstr| valstr.parse::<f64>().unwrap())
+                                        .unwrap_or(720.0);
+    let frame_time_ms: f64 = matches.value_of("fps").map(|valstr| valstr.parse::<f64>().unwrap())
+                                        .unwrap_or(15.0);
+    let scale: f64 = matches.value_of("scale").map(|valstr| valstr.parse::<f64>().unwrap())
+                                        .unwrap_or(8.0);
     let map_file = matches.value_of("map").unwrap_or("default");
 
-    assert!(width % scale == 0);
-    assert!(height % scale == 0);
 
+    assert!(width % scale == 0.0);
+    assert!(height % scale == 0.0);
+
+    // window setup
     let opengl = OpenGL::V3_2;
 
     let fullscreen = matches.occurrences_of("fullscreen") > 0;
 
-    let mut window: PistonWindow = WindowSettings::new("Game of Life", (width as f64, height as f64))
+    let mut window: PistonWindow = WindowSettings::new("Game of Life", (width, height))
         .opengl(opengl)
         .vsync(true)
         .fullscreen(fullscreen)
+        .resizable(false)
         .exit_on_esc(true)
         .build()
         .expect("Failed to build window!");
     
     let mut gl = GlGraphics::new(opengl);
+
+    gl.viewport(0, 0, width as i32, height as i32);
     
+    // game setup
     let mut game = game::Game::new(width, height, scale);
 
     game.init();
@@ -102,11 +108,9 @@ fn main() {
 
     game.toggle_pause();
 
-    // used later to draw squares to scale
-    let scale_f64: f64 = scale as f64;
-
     // for grid line drawing
     let mut lines: bool = false;
+    let mut lines_scale: f64 = scale;
 
     // mouse coords for mouse painting
     let mut mouse_pos: [f64; 2] = [0.0, 0.0];
@@ -119,62 +123,56 @@ fn main() {
     // fonts for screen text
     let assets = find_folder::Search::ParentsThenKids(3, 3).for_folder("res").unwrap();
     let font = &assets.join("Perfect-DOS-VGA-437-Win.ttf");
-    let mut glyphs = GlyphCache::new(font, (), TextureSettings::new()).expect("Unable to load font");;
+    let mut glyphs = GlyphCache::new(font, (), TextureSettings::new()).expect("Unable to load font");
 
     // event loop
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
         if let Some(r) = e.render_args() {
-            // check if we want grid lines
-            let lines_scale = if lines {
-                scale_f64 - 1.0
-            } else {
-                scale_f64
-            };
+            if !game.paused {
+                // main draw call
+                gl.draw(r.viewport(), |c, g| {
+                    // clear screen
+                    clear([0.5; 4], g);
+                    // draw cells
+                    for cell in game.grid.iter() {
+                        let colour = if cell.alive {
+                            ALIVE
+                        } else {
+                            DEAD
+                        };
+                        rectangle(colour,
+                            rectangle::square(0.0, 0.0, lines_scale),
+                            c.transform.trans(
+                                cell.coords[0] * scale, 
+                                cell.coords[1] * scale),
+                            g);   
+                    }
+                    // FPS counter
+                    if fps_display {
+                        let mut t = fps.tick().to_string();
+                        t.push_str(&fps_str);
+                        let fps_tick: &str = &t;
 
-            // DRAW!
-            gl.viewport(0, 0, r.width as i32, r.height as i32);
-
-            gl.draw(r.viewport(), |c, g| {
-                clear([1.0, 1.0, 1.0, 1.0], g);
-
-                for cell in game.grid.iter() {
-                    let colour = if cell.alive {
-                        ALIVE
-                    } else {
-                        DEAD
-                    };
-                    rectangle(colour,
-                        rectangle::square(0.0, 0.0, lines_scale),
-                        c.transform.trans(
-                            cell.coords[0] as f64 * scale_f64, 
-                            cell.coords[1] as f64 * scale_f64),
-                        g);   
-                }
-                
-                if fps_display {
-                    let mut t = fps.tick().to_string();
-                    t.push_str(&fps_str);
-                    let fps_tick: &str = &t;
-
-                    text::Text::new_color([0.0, 0.0, 0.0, 1.0], 15).draw(
-                        fps_tick,
-                        &mut glyphs,
-                        &c.draw_state,
-                        c.transform.trans(5.0, 15.0), 
-                    g).unwrap();
-                }
-            });
+                        text::Text::new_color([0.0, 0.0, 0.0, 1.0], 15).draw(
+                            fps_tick,
+                            &mut glyphs,
+                            &c.draw_state,
+                            c.transform.trans(5.0, 15.0), 
+                        g).unwrap();
+                    }
+                });
+            }
         }
         
-        if e.update_args().is_some() && !game.paused {
-            let last_time = Instant::now();
+        if let Some(u) = e.update_args() {
             // update game state
-            game.update();
+            if !game.paused {
+                game.update();
+            }
             // framerate independence
-            let delta_time = u64::from((Instant::now() - last_time).subsec_millis());
-            if delta_time < frame_time_ms {
-                thread::sleep(Duration::from_millis(frame_time_ms - delta_time));
+            if u.dt < frame_time_ms {
+                thread::sleep(Duration::from_millis((frame_time_ms - u.dt) as u64));
             }
         }
         
@@ -196,7 +194,13 @@ fn main() {
                             game.toggle_pause();
                         }
                         Key::L => {
+                            // toggle grid lines
                             lines = !lines;
+                            lines_scale = if lines {
+                                scale - 1.0
+                            } else {
+                                scale
+                            };
                         }
                         _ => {}
                     }
