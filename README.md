@@ -28,27 +28,42 @@ Press ```R``` to randomise the grid.
 The game can be modified by passing command line flags.
 
 ### Screen size
-```-w``` or ```--width``` to set screen width in pixels. Default is 1280.
+```--width``` to set window width in pixels. Default is 1280.
 
-```-h``` or ```--height``` to set screen height in pixels. Default is 720.
+```--height``` to set window height in pixels. Default is 720.
+
+For example:
+```./game_of_life --width 640 --height 480```
+
+### Full screen window
+```---fullscreen``` sets the window to full screen mode.
+
+For example:
+```./game_of_life --fullscreen```
+
+### VSync
+```--vsync``` enables vsync.
+
+For example:
+```./game_of_life --vsync```
 
 ### Custom grid from image
-```-m``` or ```--map``` followed by an image filename, generate grid from image. White pixels (i.e rgba[255, 255, 255, 255]) are dead cells, any other colours will be treated as living cells. Image file must be 1280x720.
+```--map``` followed by an image filename, generate grid from image. White pixels (i.e rgba[255, 255, 255, 255]) are dead cells, any other colours will be treated as living cells. Image file must match window height and width.
 
 For example:
-```./game_of_life -m example_map.png```
+```./game_of_life --map example_map.png```
 
 ### Update speed
-```-f``` or ```--fps``` followed by a number, controls the number of milliseconds between each grid update.
+```--ms``` followed by a number, controls the number of milliseconds between each grid update.
 
 For example:
-```./game_of_life -f 30```
+```./game_of_life --ms 30```
 
 ### Cell size
-```-s``` or ```--scale``` followed by a number, controls the size of the cells in pixels. Scale must currently be divisible by 1280 and 720.
+```--scale``` followed by a number, controls the size of the cells in pixels. Scale must be divisible by window height and width.
 
 For example:
-```./game_of_life -s 8```
+```./game_of_life --scale 8```
 
 ## To Do
 - [X] Window size command line flags (inc. start-fullscreen flag)
